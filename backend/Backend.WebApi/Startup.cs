@@ -10,9 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NSwag;
-using NSwag.Generation.Processors.Security;
-using System.Linq;
+using Microsoft.OpenApi.Models;
 
 namespace Backend.WebApi
 {
@@ -49,18 +47,42 @@ namespace Backend.WebApi
                 options.SuppressModelStateInvalidFilter = true;
             });
 
-            services.AddOpenApiDocument(configure =>
+            services.AddSwaggerGen(c =>
             {
-                configure.Title = $"{typeof(Startup).Assembly.GetName().Name} API";
-                configure.AddSecurity("JWT", Enumerable.Empty<string>(), new OpenApiSecurityScheme
+                c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Type = OpenApiSecuritySchemeType.ApiKey,
-                    Name = "Authorization",
-                    In = OpenApiSecurityApiKeyLocation.Header,
-                    Description = "Type into the textbox: Bearer {your JWT token}."
+                    Title = $"{typeof(Startup).Assembly.GetName().Name} API",
+                    Version = "v1",
                 });
 
-                configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
+                const string securityDefinitionName = "jwt_auth";
+
+                var securityDefinition = new OpenApiSecurityScheme()
+                {
+                    Name = "Bearer",
+                    BearerFormat = "JWT",
+                    Scheme = "bearer",
+                    Description = "Specify the authorization token",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                };
+
+                var securityScheme = new OpenApiSecurityScheme()
+                {
+                    Reference = new OpenApiReference()
+                    {
+                        Id = securityDefinitionName,
+                        Type = ReferenceType.SecurityScheme
+                    }
+                };
+
+                var securityRequirements = new OpenApiSecurityRequirement
+                {
+                    { securityScheme, System.Array.Empty<string>() }
+                };
+
+                c.AddSecurityDefinition(securityDefinitionName, securityDefinition);
+                c.AddSecurityRequirement(securityRequirements);
             });
         }
 
@@ -70,6 +92,12 @@ namespace Backend.WebApi
             {
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.RoutePrefix = "api";
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                });
             }
             else
             {
@@ -83,14 +111,6 @@ namespace Backend.WebApi
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
-
-            app.UseOpenApi();
-
-            app.UseSwaggerUi3(settings =>
-            {
-                settings.Path = "/api";
-                settings.DocumentPath = "/api/specification.json";
-            });
 
             app.UseRouting();
             app.UseAuthentication();
