@@ -31,9 +31,7 @@ services:
       - "UseInMemoryDatabase=false"
       - "ConnectionStrings__DefaultConnection=Server=sql-server-db;Database=BackendDb;User=sa;Password=BackendPassword1!;MultipleActiveResultSets=true"
       - "IdentityServer__Key__Type=Development"
-      - "ElasticConfiguration__Uri=http://es01:9200"
-    #volumes:
-      #- ./https/cleanarchitecture.pfx:/https/cleanarchitecture.pfx:ro
+      - "Serilog__WriteTo__Elasticsearch__args__nodeUris=http://es01:9200"
     restart: on-failure
     networks:
       - webnet
