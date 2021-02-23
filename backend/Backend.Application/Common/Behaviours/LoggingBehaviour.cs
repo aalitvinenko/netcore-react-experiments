@@ -30,7 +30,7 @@ namespace Backend.Application.Common.Behaviours
                 userName = await _identityService.GetUserNameAsync(userId);
             }
 
-            _logger.LogInformation("Matech.CleanArchitecture Request: {Name} {@UserId} {@UserName} {@Request}",
+            _logger.LogInformation("Request: {Name} {@UserId} {@UserName} {@Request}",
                 requestName, userId, userName, request);
         }
     }

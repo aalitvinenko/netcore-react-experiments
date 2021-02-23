@@ -57,7 +57,7 @@ namespace Backend.Application.Common.Behaviours
                         // Must be a member of at least one role in roles
                         if (!authorized)
                         {
-                            _logger.LogInformation("Matech.CleanArchitecture Authorization Request: {@UserId} {@Request}", _currentUserService.UserId, request);
+                            _logger.LogInformation("Authorization Request: {@UserId} {@Request}", _currentUserService.UserId, request);
                             throw new ForbiddenAccessException();
                         }
                     }

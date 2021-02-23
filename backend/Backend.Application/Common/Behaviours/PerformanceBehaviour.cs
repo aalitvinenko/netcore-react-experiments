@@ -47,7 +47,7 @@ namespace Backend.Application.Common.Behaviours
                     userName = await _identityService.GetUserNameAsync(userId);
                 }
 
-                _logger.LogWarning("Matech.CleanArchitecture Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@UserName} {@Request}",
+                _logger.LogWarning("Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@UserName} {@Request}",
                     requestName, elapsedMilliseconds, userId, userName, request);
             }
 
