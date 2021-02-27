@@ -2,6 +2,7 @@ using Backend.Application;
 using Backend.Application.Common.Interfaces;
 using Backend.Infrastructure;
 using Backend.Infrastructure.Persistence;
+using Backend.WebApi.Configuration;
 using Backend.WebApi.Filters;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -10,18 +11,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
 
 namespace Backend.WebApi
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+
+        public IWebHostEnvironment Environment { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -31,8 +34,6 @@ namespace Backend.WebApi
             services.AddSingleton<ICurrentUserService, CurrentUserService>();
 
             services.AddHttpContextAccessor();
-
-            services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddHealthChecks()
                 .AddDbContextCheck<ApplicationDbContext>();
@@ -47,57 +48,20 @@ namespace Backend.WebApi
                 options.SuppressModelStateInvalidFilter = true;
             });
 
-            services.AddSwaggerGen(c =>
+            if (Environment.IsDevelopment())
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = $"{typeof(Startup).Assembly.GetName().Name} API",
-                    Version = "v1",
-                });
-
-                const string securityDefinitionName = "jwt_auth";
-
-                var securityDefinition = new OpenApiSecurityScheme()
-                {
-                    Name = "Bearer",
-                    BearerFormat = "JWT",
-                    Scheme = "bearer",
-                    Description = "Specify the authorization token",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
-                };
-
-                var securityScheme = new OpenApiSecurityScheme()
-                {
-                    Reference = new OpenApiReference()
-                    {
-                        Id = securityDefinitionName,
-                        Type = ReferenceType.SecurityScheme
-                    }
-                };
-
-                var securityRequirements = new OpenApiSecurityRequirement
-                {
-                    { securityScheme, System.Array.Empty<string>() }
-                };
-
-                c.AddSecurityDefinition(securityDefinitionName, securityDefinition);
-                c.AddSecurityRequirement(securityRequirements);
-            });
+                services.AddDatabaseDeveloperPageExceptionFilter();
+                services.AddSwaggerConfiguration();
+            }
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.RoutePrefix = "api";
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-                });
+                app.UseConfiguredSwagger();
             }
             else
             {
