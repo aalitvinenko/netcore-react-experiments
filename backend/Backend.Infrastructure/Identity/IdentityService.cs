@@ -33,9 +33,10 @@ namespace Backend.Infrastructure.Identity
             return user.UserName;
         }
 
-        public async Task<ApplicationUserDto> CheckUserPassword(string email, string password)
+        public async Task<ApplicationUserDto> CheckUserPassword(string emailOrUserName, string password)
         {
-            ApplicationUser user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == email);
+            ApplicationUser user = await _userManager.Users
+                .FirstOrDefaultAsync(u => u.Email == emailOrUserName || u.UserName == emailOrUserName);
 
             if (user != null && await _userManager.CheckPasswordAsync(user, password))
             {
@@ -45,17 +46,17 @@ namespace Backend.Infrastructure.Identity
             return null;
         }
 
-        public async Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
+        public async Task<(Result Result, ApplicationUserDto User)> CreateUserAsync(string userName, string email, string password)
         {
             var user = new ApplicationUser
             {
                 UserName = userName,
-                Email = userName,
+                Email = email,
             };
 
             var result = await _userManager.CreateAsync(user, password);
 
-            return (result.ToApplicationResult(), user.Id);
+            return (result.ToApplicationResult(), _mapper.Map<ApplicationUserDto>(user));
         }
 
         public async Task<bool> UserIsInRole(string userId, string role)

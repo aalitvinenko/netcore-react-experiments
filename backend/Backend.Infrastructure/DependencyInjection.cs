@@ -34,7 +34,11 @@ namespace Backend.Infrastructure
 
             services.AddScoped<IDomainEventService, DomainEventService>();
 
-            services.AddDefaultIdentity<ApplicationUser>()
+            services.AddDefaultIdentity<ApplicationUser>(options =>
+                {
+                    options.User.RequireUniqueEmail = true;
+                    options.User.AllowedUserNameCharacters = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890_";
+                })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
